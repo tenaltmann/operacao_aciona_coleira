@@ -1,42 +1,28 @@
 const express = require('express');
-const http = require('http');
-const { SerialPort } = require('serialport');
-const { ReadlineParser } = require('@serialport/parser-readline');
+const { exec } = require('child_process');
 
 const app = express();
-const server = http.createServer(app);
-const io = require('socket.io')(server);
-
-const SERIAL_PORT = 'COM9'; // ajuste para sua porta
-const BAUD = 9600;
+const PORT = 3000;
 
 app.use(express.static('public'));
 
-io.on('connection', socket => {
-  console.log('💻 Cliente conectado');
+// Endpoint chamado pelo botão
+app.get('/upload', (req, res) => {
+  // Comando que vai enviar o sketch para o Arduino
+  const cmd = 'arduino-cli upload -p COM9 --fqbn arduino:avr:uno C:/Users/riyck/Desktop/www/acionamento_remoto';
 
-  let port; // SerialPort vai ser criado só no clique
-
-  socket.on('command', async cmd => {
-    if (cmd === 'RUN') {
-      // Se ainda não abriu a Serial, abra agora
-      if (!port) {
-        port = new SerialPort({ path: SERIAL_PORT, baudRate: BAUD });
-        const parser = port.pipe(new ReadlineParser({ delimiter: '\n' }));
-        parser.on('data', line => console.log('Arduino:', line));
-        await new Promise(res => setTimeout(res, 1000)); // espera 1s para Arduino resetar
-        console.log('✅ Porta serial aberta');
-      }
-
-      // Envia o comando
-      port.write('RUN\n', err => {
-        if (err) console.error('❌ Erro ao enviar comando serial:', err);
-      });
+  exec(cmd, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Erro: ${error.message}`);
+      return res.send(`Erro: ${error.message}`);
     }
+    if (stderr) {
+      console.error(`Stderr: ${stderr}`);
+      return res.send(`Stderr: ${stderr}`);
+    }
+    console.log(`Stdout: ${stdout}`);
+    res.send('Upload executado com sucesso! Servo acionado.');
   });
-
-  socket.on('disconnect', () => console.log('❌ Cliente desconectado'));
 });
 
-const PORT = 3000;
-server.listen(PORT, () => console.log(`🚀 Servidor rodando em http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Servidor rodando em http://localhost:${PORT}`));

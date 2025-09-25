@@ -1,22 +1,19 @@
-<!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <title>Acionamento Remoto</title>
-  <style>
-    body { font-family: Arial; text-align:center; margin-top:50px; }
-    button { font-size:22px; padding:15px 40px; cursor:pointer; }
-  </style>
+  <title>Acionar Servo via Upload</title>
 </head>
 <body>
   <h1>Acionar Servo</h1>
   <button id="run">Acionar</button>
 
-  <script src="/socket.io/socket.io.js"></script>
   <script>
-    const socket = io();
-    document.getElementById('run').onclick = () => {
-      socket.emit('command', 'RUN');
+    const btn = document.getElementById('run');
+    btn.onclick = () => {
+      fetch('/upload')  // chama endpoint Node.js
+        .then(res => res.text())
+        .then(console.log)
+        .catch(console.error);
     };
   </script>
 </body>
