@@ -1,15 +1,24 @@
 #include <Servo.h>
 
-Servo meuServo;  // cria objeto do tipo Servo
+Servo meuServo;
 
 void setup() {
-  meuServo.attach(9); // define que o sinal está no pino 9
+  Serial.begin(9600);
+  meuServo.attach(9);
+  meuServo.write(0);
+
 }
 
 void loop() {
-  meuServo.write(90);   // vai para 90 graus
-  delay(2500);          
-  meuServo.write(0);  // vai para 180 graus
-  while (true);       // congela o código aqui
+  if (Serial.available() > 0) {
+    String cmd = Serial.readStringUntil('\n');
+    cmd.trim();
+    if (cmd == "RUN") {
+      Serial.println("Comando recebido!");
+      meuServo.write(90);
+      delay(2500);
+      meuServo.write(0);
+      Serial.println("OK");
+    }
+  }
 }
-
